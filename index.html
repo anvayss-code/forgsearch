@@ -1320,6 +1320,22 @@ $$(".mark").forEach(i=>i.src=LOGO);
 $("#fav").href=LOGO;
 $('#broClose').onclick = () => go('');
 $('#egg2').addEventListener('click', e => { if(e.target.id === 'egg2') go(''); });
+if(new URLSearchParams(location.search).has('debug')){
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'position:fixed;left:10px;bottom:10px;right:10px;max-height:60vh;overflow:auto;background:#fff;color:#000;border:2px solid #d93025;padding:12px;z-index:99;font:13px/1.4 monospace;white-space:pre-wrap';
+  document.body.appendChild(pre);
+  const log = t => { pre.textContent += t + '\n'; };
+  log('Worker: ' + base());
+  (async () => {
+    for(const p of ['/news', '/search']){
+      try{
+        const r = await fetch(base() + p + '?q=pizza');
+        const t = await r.text();
+        log(p + ' -> HTTP ' + r.status + ' ' + t.slice(0, 300));
+      }catch(e){ log(p + ' -> FAILED: ' + e.message); }
+    }
+  })();
+}
 loadGoogle();
 renderRecent();
 applyWall();
