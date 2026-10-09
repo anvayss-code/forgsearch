@@ -87,6 +87,15 @@ button{font:inherit;cursor:pointer}
 .stage.ok i{background:var(--green)}
 .stage.err i{background:#d93025}
 @keyframes pulse{50%{opacity:.25}}
+.think{display:flex;align-items:center;gap:10px;color:var(--muted,#5f6368)}
+.think .orb{width:18px;height:18px;border-radius:50%;border:2.5px solid #d7ece0;border-top-color:#188038;animation:spin .8s linear infinite;flex:none}
+.think .txt{background:linear-gradient(90deg,#80868b 30%,#202124 50%,#80868b 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.6s linear infinite}
+.think .dots i{display:inline-block;width:4px;height:4px;border-radius:50%;background:#80868b;margin-left:3px;animation:bounce 1s infinite}
+.think .dots i:nth-child(2){animation-delay:.15s}.think .dots i:nth-child(3){animation-delay:.3s}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{to{background-position:-200% 0}}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+.acct .ini2{width:100%;height:100%;display:grid;place-items:center;background:#188038;color:#fff;font-weight:600;font-size:16px}
 details.drafts{margin-top:10px;font-size:13px;color:var(--muted)}
 details.drafts summary{cursor:pointer}
 details.drafts div{margin-top:8px;padding:10px 12px;background:var(--chip);border-radius:10px;color:var(--text)}
@@ -684,6 +693,7 @@ async function runPipeline(q, history, extra){
 const tidy = t => { t = String(t); const i = t.search(/(^|\s)#[A-Za-z]/); if(i > 40) t = t.slice(0, i); if(t.length > 1400){ t = t.slice(0, 1400); t = t.slice(0, Math.max(t.lastIndexOf('. '), t.lastIndexOf('! '), t.lastIndexOf('? ')) + 1) || t; } return t; };
 const tidy2 = t => tidy(t).replace(/(^|\s)#[A-Za-z]\w*/g, '$1').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
 const persona = () => TROMBO + (user && user.given && !privateMode ? ` The person you are talking to is called ${user.given}. Use their first name now and then, naturally, like a friend would.` : '');
+const thinking = t => `<div class="think"><span class="orb"></span><span class="txt">${t}</span><span class="dots"><i></i><i></i><i></i></span></div>`;
 const SORRY = "Trombo isn't available right now 😅 Try again in a moment!";
 
 /* ================= views ================= */
@@ -757,7 +767,7 @@ async function analyzeThenGo(tab){
   const tok = ++analyzeToken; const img = currentImage;
   ['#kp', '#wikiBox', '#sites', '#webBox', '#imgStrip', '#newsStrip'].forEach(s => { $(s).innerHTML = ''; });
   $('#imgCard').innerHTML = imgCardHtml(img);
-  $('#aiSummary').innerHTML = `<h3>Forg Co Trombo</h3><div class="ai-body note">Taking a good look at your picture... 👀</div>`;
+  $('#aiSummary').innerHTML = `<h3>Forg Co Trombo</h3><div class="ai-body">${thinking("Taking a good look at your picture")}</div>`;
   const info = ai().proxy ? await analyzeImage(img.url) : null;
   if(tok !== analyzeToken) return;
   img.done = true; img.info = info;
@@ -829,7 +839,7 @@ function renderAll(q){
 
 async function runSummary(q, id){
   const box = $('#aiSummary');
-  box.innerHTML = `<h3>Forg Co Trombo</h3><div class="ai-body note">Let me look into that for you... 🔎</div>`;
+  box.innerHTML = `<h3>Forg Co Trombo</h3><div class="ai-body">${thinking("Trombo is thinking")}</div>`;
   try{
     const web = await gatherContext(q);
     if(id !== runId) return;
@@ -939,7 +949,7 @@ function drawChat(){
   }
   el.innerHTML = chat.map(m => m.role === 'user'
     ? `<div class="msg user"><div>${m.image ? `<img src="${esc(m.image)}" alt="Your picture">` : ''}${esc(m.text)}</div></div>`
-    : `<div class="msg bot"><div class="ai-body ${m.pending ? 'note' : ''}">${m.pending ? 'Trombo is thinking... 💭' : md(m.text)}</div></div>`
+    : `<div class="msg bot"><div class="ai-body">${m.pending ? thinking('Trombo is thinking') : md(m.text)}</div></div>`
   ).join('');
 }
 async function sendChat(text, opts){
@@ -1105,7 +1115,7 @@ function renderAccount(){
   ['#acctHome', '#acctBar'].forEach(sel => {
     const el = $(sel); el.innerHTML = '';
     if(user){
-      el.innerHTML = `<button class="avatar" title="${esc(user.name)}" aria-label="Account"><img src="${esc(user.picture)}" alt="" referrerpolicy="no-referrer"></button>
+      el.innerHTML = `<button class="avatar" title="${esc(user.name)}" aria-label="Account">${user.picture ? `<img src="${esc(user.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;ini2&quot;>${esc((user.name || '?')[0].toUpperCase())}</span>'">` : `<span class="ini2">${esc((user.name || '?')[0].toUpperCase())}</span>`}</button>
         <div class="menu hidden"><b>${esc(user.name)}</b><span>${esc(user.email)}</span><button class="btn" data-signout>Sign out</button></div>`;
     } else if(window.google && google.accounts && google.accounts.id){
       google.accounts.id.renderButton(el, {theme:'outline', size:'medium', shape:'pill', text:'signin'});
