@@ -193,7 +193,7 @@ input.t{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:
   <div class="logo"><img class="mark" alt="Forg Co"><div class="word"><span>TurboEngine</span></div></div>
   <div class="modes">
     <button class="mode on" data-mode="all">All</button>
-    <button class="mode" data-mode="ai">AI Mode</button>
+    <button class="mode" data-mode="ai">Ask Trombo</button>
   </div>
   <form class="sbox" id="homeForm" autocomplete="off">
     <input id="homeQ" type="text" placeholder="Search the web or ask anything" autofocus>
@@ -218,7 +218,7 @@ input.t{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:
     </div>
     <div class="tabs">
       <button class="tab on" data-tab="all"><svg><use href="#i-all"/></svg>All</button>
-      <button class="tab" data-tab="ai"><svg><use href="#i-spark"/></svg>AI Mode</button>
+      <button class="tab" data-tab="ai"><svg><use href="#i-spark"/></svg>Ask Trombo</button>
     </div>
   </div>
 
@@ -499,7 +499,7 @@ function _unusedDrafts(r){
   return parts.length ? `<details class="drafts"><summary>See what each model said</summary>${parts.join('')}</details>` : '';
 }
 function noKeyHtml(){
-  return `<p class="note" style="margin:0">AI isn't available right now.</p>`;
+  return `<p class="note" style="margin:0">Trombo isn't available right now.</p>`;
 }
 
 /* ================= views ================= */
@@ -564,9 +564,9 @@ function renderAll(q){
   const box = $('#aiSummary'); const cfg = ai();
   box.classList.remove('hidden');
   if(!cfg.on){
-    box.innerHTML = `<h3>AI summary <span class="badge">AI</span></h3>` + noKeyHtml();
+    box.innerHTML = `<h3>Forg Co Trombo</h3>` + noKeyHtml();
   } else if(!cfg.auto){
-    box.innerHTML = `<h3>AI summary <span class="badge">AI</span></h3><button class="btn primary" id="sumGo">Summarize this search</button>`;
+    box.innerHTML = `<h3>Forg Co Trombo</h3><button class="btn primary" id="sumGo">Summarize this search</button>`;
     $('#sumGo').onclick = () => runSummary(q, id);
   } else runSummary(q, id);
 
@@ -601,17 +601,17 @@ function renderAll(q){
 
 async function runSummary(q, id){
   const box = $('#aiSummary');
-  box.innerHTML = `<h3>AI summary <span class="badge">AI</span></h3><div class="ai-body note">Thinking...</div>` + stagesHtml();
+  box.innerHTML = `<h3>Forg Co Trombo</h3><div class="ai-body note">Thinking...</div>` + stagesHtml();
   const set = stageSetter(box);
   try{
     const r = await runPipeline(q, [], set);
     if(id !== runId) return;
     box.querySelector('.ai-body').className = 'ai-body';
     box.querySelector('.ai-body').innerHTML = md(r.final);
-    box.insertAdjacentHTML('beforeend', draftsHtml(r) + `<p class="note" style="margin:10px 0 0">AI can be wrong. Check anything important against the sources below.</p>`);
+    box.insertAdjacentHTML('beforeend', draftsHtml(r) + `<p class="note" style="margin:10px 0 0">Trombo can be wrong. Check anything important against the sources below.</p>`);
   }catch(e){
     if(id !== runId) return;
-    box.querySelector('.ai-body').innerHTML = 'AI isn\'t available right now. Try again in a moment.';
+    box.querySelector('.ai-body').innerHTML = 'Trombo isn\'t available right now. Try again in a moment.';
   }
 }
 
@@ -624,7 +624,7 @@ function renderAi(q){
 function drawChat(){
   const el = $('#chat');
   if(!chat.length){
-    el.innerHTML = `<div class="empty"><h2>AI Mode</h2><p>Ask me anything.</p>${ai().on ? '' : noKeyHtml()}</div>`;
+    el.innerHTML = `<div class="empty"><h2>Ask Trombo</h2><p>Ask me anything.</p>${ai().on ? '' : noKeyHtml()}</div>`;
     return;
   }
   el.innerHTML = chat.map((m, i) => m.role === 'user'
@@ -638,7 +638,7 @@ async function sendChat(q, fresh){
   const bot = {role:'bot', text:'', pending:true};
   chat.push(bot); drawChat();
   window.scrollTo(0, document.body.scrollHeight);
-  if(!cfg.on){ bot.pending = false; bot.text = "AI isn't available right now."; drawChat(); return; }
+  if(!cfg.on){ bot.pending = false; bot.text = "Trombo isn't available right now."; drawChat(); return; }
   const node = $('#chat').querySelector('.msg.bot:last-child');
   const set = stageSetter(node);
   const hist = chat.slice(0, -2);
@@ -646,7 +646,7 @@ async function sendChat(q, fresh){
     const r = await runPipeline(q, hist, set);
     bot.text = r.final; bot.r = r; bot.pending = false;
   }catch(e){
-    bot.text = 'AI isn\'t available right now. Try again in a moment.'; bot.pending = false;
+    bot.text = 'Trombo isn\'t available right now. Try again in a moment.'; bot.pending = false;
   }
   drawChat();
   window.scrollTo(0, document.body.scrollHeight);
@@ -657,7 +657,7 @@ let homeMode = 'all';
 $$('.mode').forEach(b => b.onclick = () => {
   homeMode = b.dataset.mode;
   $$('.mode').forEach(x => x.classList.toggle('on', x === b));
-  $('#homeQ').placeholder = homeMode === 'ai' ? 'Ask AI anything' : 'Search the web or ask anything';
+  $('#homeQ').placeholder = homeMode === 'ai' ? 'Ask Trombo anything' : 'Search the web or ask anything';
   $('#homeQ').focus();
 });
 $('#homeForm').onsubmit = e => { e.preventDefault(); const q = $('#homeQ').value.trim(); if(q || homeMode === 'ai') go(q, homeMode); };
