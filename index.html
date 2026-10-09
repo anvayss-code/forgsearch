@@ -245,12 +245,8 @@ input.t{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:
 
 <!-- ============ SETTINGS ============ -->
 <dialog id="settings">
-  <div class="dh"><h2>Settings</h2><button class="icon-btn" id="closeSet" title="Close"><svg><use href="#i-close"/></svg></button></div>
-  <div class="dtabs">
-    <button class="tab on" data-st="wall">Wallpaper</button>
-    <button class="tab" data-st="ai">AI</button>
-  </div>
-  <div class="dbody">
+  <div class="dh"><h2>Wallpaper</h2><button class="icon-btn" id="closeSet" title="Close"><svg><use href="#i-close"/></svg></button></div>
+    <div class="dbody">
     <div id="st-wall">
       <div class="walls" id="wallGrid"></div>
       <label class="f">Upload your own</label>
@@ -479,6 +475,9 @@ async function runPipeline(q, history, onStage){
 
 const LABEL = {mistral:'Mistral', llama:'Llama', gemma:'Gemma'};
 function stagesHtml(){
+  return '';
+}
+function _unusedStages(){
   return '<div class="stages">' + ['mistral','llama','gemma'].map(n =>
     `<span class="stage" data-s="${n}"><i></i>${LABEL[n]}</span>`).join('') + '</div>';
 }
@@ -491,13 +490,16 @@ function stageSetter(root){
   };
 }
 function draftsHtml(r){
+  return '';
+}
+function _unusedDrafts(r){
   const parts = [];
   if(r.drafts.mistral) parts.push(`<div><b>Mistral</b> (facts)${md(r.drafts.mistral)}</div>`);
   if(r.drafts.llama) parts.push(`<div><b>Llama</b> (explainer)${md(r.drafts.llama)}</div>`);
   return parts.length ? `<details class="drafts"><summary>See what each model said</summary>${parts.join('')}</details>` : '';
 }
 function noKeyHtml(){
-  return `<p class="note" style="margin:0 0 10px">AI is off. Add a free OpenRouter key in Settings to turn it on.</p><button class="btn primary" data-open-ai>Set up AI</button>`;
+  return `<p class="note" style="margin:0">AI isn't available right now.</p>`;
 }
 
 /* ================= views ================= */
@@ -562,9 +564,9 @@ function renderAll(q){
   const box = $('#aiSummary'); const cfg = ai();
   box.classList.remove('hidden');
   if(!cfg.on){
-    box.innerHTML = `<h3>AI summary <span class="badge">Mistral + Llama + Gemma</span></h3>` + noKeyHtml();
+    box.innerHTML = `<h3>AI summary <span class="badge">AI</span></h3>` + noKeyHtml();
   } else if(!cfg.auto){
-    box.innerHTML = `<h3>AI summary <span class="badge">Mistral + Llama + Gemma</span></h3><button class="btn primary" id="sumGo">Summarize this search</button>`;
+    box.innerHTML = `<h3>AI summary <span class="badge">AI</span></h3><button class="btn primary" id="sumGo">Summarize this search</button>`;
     $('#sumGo').onclick = () => runSummary(q, id);
   } else runSummary(q, id);
 
@@ -599,7 +601,7 @@ function renderAll(q){
 
 async function runSummary(q, id){
   const box = $('#aiSummary');
-  box.innerHTML = `<h3>AI summary <span class="badge">Mistral + Llama + Gemma</span></h3><div class="ai-body note">Mistral and Llama are working on it, then Gemma will combine them...</div>` + stagesHtml();
+  box.innerHTML = `<h3>AI summary <span class="badge">AI</span></h3><div class="ai-body note">Thinking...</div>` + stagesHtml();
   const set = stageSetter(box);
   try{
     const r = await runPipeline(q, [], set);
@@ -609,7 +611,7 @@ async function runSummary(q, id){
     box.insertAdjacentHTML('beforeend', draftsHtml(r) + `<p class="note" style="margin:10px 0 0">AI can be wrong. Check anything important against the sources below.</p>`);
   }catch(e){
     if(id !== runId) return;
-    box.querySelector('.ai-body').innerHTML = 'The AI summary failed: ' + esc(e.message) + '. Check your key and model names in Settings.';
+    box.querySelector('.ai-body').innerHTML = 'AI isn\'t available right now. Try again in a moment.';
   }
 }
 
@@ -622,7 +624,7 @@ function renderAi(q){
 function drawChat(){
   const el = $('#chat');
   if(!chat.length){
-    el.innerHTML = `<div class="empty"><h2>AI Mode</h2><p>Ask anything. Mistral and Llama answer separately, then Gemma merges them.</p>${ai().on ? '' : noKeyHtml()}</div>`;
+    el.innerHTML = `<div class="empty"><h2>AI Mode</h2><p>Ask me anything.</p>${ai().on ? '' : noKeyHtml()}</div>`;
     return;
   }
   el.innerHTML = chat.map((m, i) => m.role === 'user'
@@ -636,7 +638,7 @@ async function sendChat(q, fresh){
   const bot = {role:'bot', text:'', pending:true};
   chat.push(bot); drawChat();
   window.scrollTo(0, document.body.scrollHeight);
-  if(!cfg.on){ bot.pending = false; bot.text = 'AI is off right now. Add a free OpenRouter key in Settings to use AI Mode.'; drawChat(); return; }
+  if(!cfg.on){ bot.pending = false; bot.text = "AI isn't available right now."; drawChat(); return; }
   const node = $('#chat').querySelector('.msg.bot:last-child');
   const set = stageSetter(node);
   const hist = chat.slice(0, -2);
@@ -644,7 +646,7 @@ async function sendChat(q, fresh){
     const r = await runPipeline(q, hist, set);
     bot.text = r.final; bot.r = r; bot.pending = false;
   }catch(e){
-    bot.text = 'Something went wrong: ' + e.message + '. Check your key and model names in Settings.'; bot.pending = false;
+    bot.text = 'AI isn\'t available right now. Try again in a moment.'; bot.pending = false;
   }
   drawChat();
   window.scrollTo(0, document.body.scrollHeight);
@@ -699,8 +701,8 @@ function fillSettings(){
   renderWallGrid();
 }
 $('#wallBtn').onclick = () => openSettings('wall');
-$('#setBtn').onclick = () => openSettings('ai');
-$('#setBtn2').onclick = () => openSettings('ai');
+$('#setBtn').onclick = () => openSettings('wall');
+$('#setBtn2').onclick = () => openSettings('wall');
 $('#closeSet').onclick = () => dlg.close();
 dlg.addEventListener('click', e => { if(e.target === dlg) dlg.close(); });
 $$('.dtabs .tab').forEach(t => t.onclick = () => switchSt(t.dataset.st));
